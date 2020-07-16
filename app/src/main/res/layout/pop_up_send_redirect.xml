@@ -103,7 +103,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
-                        android:text="Add"
+                        android:text="Send"
                         android:textColor="@android:color/white"
                         android:textSize="12sp" />
                 </androidx.cardview.widget.CardView>
