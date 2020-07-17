@@ -1,9 +1,14 @@
 package id.prahasiwi.sms;
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -157,6 +162,58 @@ public class LewatAplikasiFragment extends Fragment {
     }
 
     private void selectOption(final SubscriptionInfo simInfo1, final SubscriptionInfo simInfo2) {
+        String SENT = "SMS_SENT";
+        String DELIVERED = "SMS_DELIVERED";
+
+        final PendingIntent sentPI = PendingIntent.getBroadcast(context, 0, new Intent(SENT), 0);
+        final PendingIntent deliveredPI = PendingIntent.getBroadcast(context, 0, new Intent(DELIVERED), 0);
+
+        //---when the SMS has been sent---
+        getActivity().registerReceiver(new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context arg0, Intent arg1) {
+                switch (getResultCode()) {
+                    case Activity.RESULT_OK:
+                        Toast.makeText(arg0, "SMS sent",
+                                Toast.LENGTH_SHORT).show();
+                        break;
+                    case SmsManager.RESULT_ERROR_GENERIC_FAILURE:
+                        Toast.makeText(arg0, "Generic failure",
+                                Toast.LENGTH_SHORT).show();
+                        break;
+                    case SmsManager.RESULT_ERROR_NO_SERVICE:
+                        Toast.makeText(arg0, "No service",
+                                Toast.LENGTH_SHORT).show();
+                        break;
+                    case SmsManager.RESULT_ERROR_NULL_PDU:
+                        Toast.makeText(arg0, "Null PDU",
+                                Toast.LENGTH_SHORT).show();
+                        break;
+                    case SmsManager.RESULT_ERROR_RADIO_OFF:
+                        Toast.makeText(arg0, "Radio off",
+                                Toast.LENGTH_SHORT).show();
+                        break;
+                }
+            }
+        }, new IntentFilter(SENT));
+
+        //---when the SMS has been delivered---
+        getActivity().registerReceiver(new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context arg0, Intent arg1) {
+                switch (getResultCode()) {
+                    case Activity.RESULT_OK:
+                        Toast.makeText(arg0, "SMS delivered",
+                                Toast.LENGTH_SHORT).show();
+                        break;
+                    case Activity.RESULT_CANCELED:
+                        Toast.makeText(arg0, "SMS not delivered",
+                                Toast.LENGTH_SHORT).show();
+                        break;
+                }
+            }
+        }, new IntentFilter(DELIVERED));
+
         final CharSequence[] items = {"SIM 1", "SIM 2"};
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle("Pilih SIM");
@@ -165,10 +222,10 @@ public class LewatAplikasiFragment extends Fragment {
             public void onClick(DialogInterface dialogInterface, int i) {
                 if (items[i].equals("SIM 1")) {
                     //SendSMS From SIM One
-                    SmsManager.getSmsManagerForSubscriptionId(simInfo1.getSubscriptionId()).sendTextMessage(edt_phone.getText().toString(), null, edt_message.getText().toString(), null, null);
+                    SmsManager.getSmsManagerForSubscriptionId(simInfo1.getSubscriptionId()).sendTextMessage(edt_phone.getText().toString(), null, edt_message.getText().toString(), sentPI, deliveredPI);
                 } else {
                     //SendSMS From SIM Two
-                    SmsManager.getSmsManagerForSubscriptionId(simInfo2.getSubscriptionId()).sendTextMessage(edt_phone.getText().toString(), null, edt_message.getText().toString(), null, null);
+                    SmsManager.getSmsManagerForSubscriptionId(simInfo2.getSubscriptionId()).sendTextMessage(edt_phone.getText().toString(), null, edt_message.getText().toString(), sentPI, deliveredPI);
                 }
             }
         });
